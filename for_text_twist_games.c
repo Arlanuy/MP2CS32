@@ -86,13 +86,13 @@ void tabsPrinter(int num_tabs, FILE* output_file) {
 
 void spacesPrinter(double fractional_tabs, FILE* output_file) {
     int i, space_tab_equiv = 4;
-    for (i = 0; i < (int)fractional_tabs * space_tab_equiv; i++) {
+    int num_spaces = round(fractional_tabs * space_tab_equiv); 
+    for (i = 0; i < num_spaces; i++) {
         fprintf(output_file, " ");
     }
 }
 
-int* nullNodeChecker(Queue* q, int num_nodes) {
-    int* nodes_height_tags = malloc((q->front - 1) * sizeof(int));
+void nullNodeChecker(Queue* q, int num_nodes, int* nodes_height_tags) {
     int i, j = 0;
     for (i = 1; i <= q->front; i++) {
         fprintf(stderr, "q->arr[i]->data: %c\n", q->arr[i]->data);
@@ -120,7 +120,7 @@ int* nullNodeChecker(Queue* q, int num_nodes) {
         
         j++;
     }
-    return nodes_height_tags;
+    //return nodes_height_tags;
 }
 
 void levelOrderPrinting(Node* root, int size, FILE* output_file) {
@@ -140,7 +140,8 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
         null_node->data = '0';
         null_node->LSON = NULL;
         null_node->RSON = NULL;
-        int nht_iterator = 0;
+        int nht_iterator = 0, orig_num_nodes = 2;
+        int* nodes_height_tags = NULL;
         while (!isEmpty(*q)) {
             //printf("front %d rear %d", q.front, q.rear);
             Node* current = dequeue(q);
@@ -148,18 +149,23 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
 
             Node* root_LSON = current->LSON;
             Node* root_RSON = current->RSON;
-            int * nodes_height_tags;
+            int * nodes_height_tags = NULL;
             //in charge with constructing the graphical binary tree
-            if (current->data != '0') {
+            if (current->data != '0' || new_line_generator == 0) {
                  
                 if (num_nodes != 1 && new_line_generator == 0) {
-                    nodes_height_tags = nullNodeChecker(q, num_nodes);
+                    //orig_num_nodes += num_nodes;
+                    orig_num_nodes += 2 * num_nodes;
+                    fprintf(stderr, "orig: %d new: %d", orig_num_nodes, num_nodes);
+                    nodes_height_tags = realloc(nodes_height_tags, orig_num_nodes * sizeof(int));
+                    nullNodeChecker(q, orig_num_nodes, nodes_height_tags);
                     int k;
                     printContent(q);
-                    for (k = 0; k < q->front; k++) {
+                    for (k = 0; k < orig_num_nodes; k++) {
                         fprintf(stderr, "k is %d overjoyed %d\t", k, nodes_height_tags[k]);    
                     }
                     fprintf(stderr,"\n");
+                    fprintf(stderr, "nandito ka ay ayos na %d", num_nodes);
                     if (num_nodes ==  2) {
                         if (nodes_height_tags[nht_iterator] == 1) {
                             if (current->LSON != NULL)
@@ -251,38 +257,49 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
                             nht_iterator++;
                         }
                         fprintf(output_file, "\n");
- 
+
                     }
                     
                     else {
                         int j;
-                        for (j = 1; j < num_nodes; j*=2) {
+                         fprintf(stderr, "nandito ka ay ayos na2");
+                        for (j = 1; j <= num_nodes; j*=2) {
                             if (nodes_height_tags[nht_iterator] == 1) {
                                 spacesPrinter(((fractional_tabs/GOLDENRATIO)*3)/2, output_file);
-                                fprintf(output_file, "/");
+                                fprintf(output_file, "  /");
                             }
                             
                             else {
                                 spacesPrinter(((fractional_tabs/GOLDENRATIO)*3)/2, output_file);
-                                fprintf(output_file, "/");
+                                fprintf(output_file, "   ");
                             }
                             nht_iterator++;
+                            fprintf(stderr, "iter 1 at %d", nht_iterator);
                             if (nodes_height_tags[nht_iterator] == 1) {
                                 spacesPrinter((fractional_tabs/GOLDENRATIO)/2, output_file);
-                                fprintf(output_file, "\\\n");
+                                fprintf(output_file, "  \\");
                             }
                             
                             else {
                                 spacesPrinter((fractional_tabs/GOLDENRATIO)/2, output_file);
-                                fprintf(output_file, "\\\n");
+                                fprintf(output_file, "   ");
                             }
                             nht_iterator++;
+                            fprintf(stderr, "iter 2 at %d", nht_iterator);
                         }
+                        fprintf(output_file, "\n");
                     }
                    
                 }
-                tabsPrinter(tabs_generator, output_file);
-                fprintf(output_file, "%c\t", current->data);
+                
+                if (current->data != '0') {
+                    tabsPrinter(tabs_generator, output_file);
+                    fprintf(output_file, "%c\t", current->data);
+                }
+
+                else {
+                    tabsPrinter(tabs_generator, output_file);
+                }
                 
             }
             
@@ -307,22 +324,30 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
             
             if (root_RSON != NULL && root_RSON->data != '0') {
                 //fprintf(stderr, "data RSON %c\n", root_RSON->data);
+                if (root_RSON->data == 'C') {
+                    printf("pare ko C %d\n", null_node_counter);
+                }
                 enqueue(q, root_RSON);
             }
             
             else {
                 //tabsPrinter(tabs_generator, output_file);
+                printf("pare ko L ko siya %d\n", null_node_counter);
                 null_node_counter++;
                 enqueue(q, null_node);
                 //fprintf(stderr, "data RSON %c\n", null_node->data);
             }
+
             //times 2 because we are checking for the number of null nodes on the current height + 1
             if (null_node_counter == 2*num_nodes) {
                 //fprintf(stderr, "nlg %d current data %c nnc: %d != 2*num_nodes: %d", new_line_generator, current->data, null_node_counter, 2*num_nodes);
+                printf("I'll wait for you\n"); 
+                printContent(q);
+                printf("\nlast %c null_node_counter %d num_nodes %d\n", current->data, null_node_counter, num_nodes);
                 fprintf(output_file, "\n");
                 break;
             }
-            
+            printf("nlg %d\n", new_line_generator);
             new_line_generator++;
             if (new_line_generator == num_nodes) {
                 fractional_tabs = (double)tabs_generator/GOLDENRATIO;
@@ -403,6 +428,7 @@ int main(void) {
     root_RSON->RSON = NULL;
     
     root->LSON = root_LSON;
+    root->RSON = NULL;
     //root->RSON = root_RSON;
     
     Node *root2_LSON = malloc(sizeof(Node));
@@ -414,8 +440,8 @@ int main(void) {
     root_LSON->RSON = root2_RSON;
     root2_RSON->RSON = root_RSON;
     root2_RSON->LSON = NULL;
-    root2_LSON->LSON = NULL;
     root2_LSON->RSON = NULL;
+    root2_LSON->LSON = NULL;
     //printf("love %p-%p", root2_LSON->LSON, root2_LSON->RSON);
 
     
