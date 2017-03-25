@@ -1,4 +1,2 @@
 Preorder: DICEOSVRY
 Inorder: CEIODSRVY
-Preorder: HEPAIFY
-Inorder: PEIHAYF
