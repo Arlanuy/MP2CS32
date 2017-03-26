@@ -86,7 +86,7 @@ void tabsPrinter(int num_tabs, FILE* output_file) {
 }
 
 void spacesPrinter(double fractional_tabs, FILE* output_file) {
-    int i, space_tab_equiv = 3;
+    int i, space_tab_equiv = 4;
     int num_spaces = round(fractional_tabs * space_tab_equiv); 
     for (i = 0; i < num_spaces; i++) {
         fprintf(output_file, " ");
@@ -141,7 +141,7 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
         null_node->data = '0';
         null_node->LSON = NULL;
         null_node->RSON = NULL;
-        int nht_iterator = 0, orig_num_nodes = 2, passed_in_else = FALSE;
+        int nht_iterator = 0, orig_num_nodes = 2, passed_in_before_else = FALSE, passed_in_else = FALSE;
         int* nodes_height_tags = NULL;
         while (!isEmpty(*q)) {
             //printf("front %d rear %d", q.front, q.rear);
@@ -215,6 +215,7 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
 
                     else if (num_nodes == 4){
                         int j;
+                        passed_in_before_else = TRUE;
                         
                         for (j = 1; j < num_nodes; j*=2) {
                             if (nodes_height_tags[nht_iterator] == 1) {
@@ -240,73 +241,83 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
                             nht_iterator++;
                         }
                         fprintf(output_file, "\n");
-
+                        fprintf(output_file, "     ");
                     }
                     
                     else {
-                        passed_in_else = TRUE;
                         int j;
+                        passed_in_before_else = FALSE;
+                        passed_in_else = TRUE;
+                        fprintf(output_file, "  ");
                         for (j = 1; j <= num_nodes; j*=2) {
                             if (nodes_height_tags[nht_iterator] == 1) {
-                                spacesPrinter(((fractional_tabs/GOLDENRATIO)*3)/2, output_file);
-                                fprintf(output_file, "  /");
+                                spacesPrinter(((fractional_tabs/GOLDENRATIO)*7)/4, output_file);
+                                fprintf(output_file, "/");
                             }
                             
                             else {
-                                spacesPrinter(((fractional_tabs/GOLDENRATIO)*3)/2, output_file);
-                                fprintf(output_file, "   ");
+                                spacesPrinter(((fractional_tabs/GOLDENRATIO)*7)/4, output_file);
+                                fprintf(output_file, "  ");
                             }
                             nht_iterator++;
                             if (nodes_height_tags[nht_iterator] == 1) {
-                                spacesPrinter((fractional_tabs/GOLDENRATIO)/2, output_file);
-                                fprintf(output_file, "  \\");
+                                spacesPrinter((fractional_tabs/GOLDENRATIO)*3/4, output_file);
+                                fprintf(output_file, " \\");
                             }
                             
                             else {
-                                spacesPrinter((fractional_tabs/GOLDENRATIO)/2, output_file);
-                                fprintf(output_file, "   ");
+                                spacesPrinter((fractional_tabs/GOLDENRATIO)*3/4, output_file);
+                                fprintf(output_file, "  ");
                             }
                             nht_iterator++;
                         }
                         fprintf(output_file, "\n");
+                        fprintf(output_file, "        ");
                     }
                    
                 }
-                if (passed_in_else == FALSE) {
-                   if (current->data != '0') {
-                        tabsPrinter(tabs_generator, output_file);
-                        fprintf(output_file, "%c\t", current->data);
-                    }
-
-                    else {
-                        tabsPrinter(tabs_generator, output_file);
-                    } 
-                }
                 
+                if (current->data != '0') {
+                    if (passed_in_before_else == TRUE) {
+                        spacesPrinter((fractional_tabs/GOLDENRATIO), output_file);
+                    }
+                    
+                    
+                    else if (passed_in_else == FALSE) {
+                        tabsPrinter(tabs_generator, output_file);
+                    }
+                    
+                    else {
+                        spacesPrinter((fractional_tabs/GOLDENRATIO)/GOLDENRATIO, output_file);
+                    }
+                    fprintf(output_file, "%c\t", current->data);
+                    if (passed_in_before_else == TRUE) {
+                        fprintf(output_file, "   ");
+                    }
+                }
+
                 else {
-                    if (current->data != '0') {
-                        spacesPrinter(fractional_tabs, output_file);
-                        fprintf(output_file, "%c\t", current->data);
+                    
+                    if (passed_in_before_else == TRUE) {
+                        spacesPrinter((fractional_tabs/GOLDENRATIO), output_file);
+                        fprintf(output_file, "  ");
                     }
-
+                    
+                    else if (passed_in_else == FALSE) {
+                        tabsPrinter(tabs_generator, output_file);
+                        fprintf(output_file, "  ");
+                    }
+                    
                     else {
-                        spacesPrinter(fractional_tabs, output_file);
-                    } 
+                        spacesPrinter((fractional_tabs/GOLDENRATIO)/GOLDENRATIO, output_file);
+                        fprintf(output_file, "  ");
+                    }
                 }
-                
-                
-                passed_in_else = FALSE;
                 
             }
             
             else {
-                if (passed_in_else == FALSE) {
-                    tabsPrinter(tabs_generator, output_file);
-                }
-                
-                else {
-                    spacesPrinter(fractional_tabs, output_file);
-                } 
+                tabsPrinter(tabs_generator, output_file);
             }
             
                        
