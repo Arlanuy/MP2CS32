@@ -137,6 +137,7 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
         while (!isEmpty(*q)) {
             //printf("front %d rear %d", q.front, q.rear);
             Node* current = dequeue(q);
+            fprintf(output_file, "data is %c num nodes is %d\n", current->data, num_nodes);
             assert(current != NULL);
 
             Node* root_LSON = current->LSON;
@@ -356,6 +357,7 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
             }
             
         }
+        printf("passed through here");
         free(null_node);
         freeContent(q);
         free(q);
@@ -430,7 +432,7 @@ int getIRU(int* visited_binary_tags, int string_length, int root_ind) {
     return i;
 }
 
-Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder_string, char* new_inorder_string, int orig_inorder_string_length, int inorder_string_length, int* visited_binary_tags) {
+Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder_string, char* new_inorder_string, int orig_inorder_string_length, int inorder_string_length) {
     Node *root;
     inorder_string_length = getLength(new_inorder_string);
     if ((inorder_string_length == 0) || (new_inorder_string == NULL) || (preorder_string[*ind_preorder] == '\0')) {
@@ -457,9 +459,9 @@ Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder
         if (left_subtree != NULL)
         printf("ls: %s\n", left_subtree);
         (*ind_preorder)++;
-        root->LSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, left_subtree, orig_inorder_string_length, inorder_string_length, visited_binary_tags);
+        root->LSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, left_subtree, orig_inorder_string_length, inorder_string_length);
         (*ind_preorder)++;
-        root->RSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, right_subtree, orig_inorder_string_length, inorder_string_length, visited_binary_tags);
+        root->RSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, right_subtree, orig_inorder_string_length, inorder_string_length);
         return root;
     }
 
@@ -517,12 +519,11 @@ int main(void) {
     input_name = malloc(sizeof(char) * filename_size); 
     assert(input_name != NULL);
     FILE* input_file, *output_file;
-    int* visited_binary_tags;
     
     //for output
     //char* output_name = malloc(sizeof(char) * filename_size);
     //assert(output_name != NULL);
-    char* output_name = "output.txt";
+    char* output_name = "out.txt";
     output_file = fopen(output_name, "a");
     assert(output_file != NULL);
     
@@ -534,7 +535,10 @@ int main(void) {
     Node* root; 
     do {
         while (success_choice == FALSE) {
+            printf("wait");
+            fprintf(output_file, "wait");
             menu_choice = printMenu(menu_choice, menuchoice_size);
+            fprintf(output_file, "be ready for disappointments");
             printf("%s\n", menu_choice);
             if (strlen(menu_choice) == 1) {
                 num_menu = menu_choice[0] - '0';
@@ -550,6 +554,55 @@ int main(void) {
             else {
                 printf("Enter a choice of length 1 only");
             }    
+        }
+        
+        if (num_menu == 1) {
+            while (num_menu == 1) {
+                printf("What is the string in preorder traversal: ");
+                fgets(preorder_string, string_size, stdin);
+                preorder_string[strlen(preorder_string) - 1] = '\0';
+                printf("What is the string in inorder traversal: ");
+                fgets(inorder_string, string_size, stdin);
+                inorder_string[strlen(inorder_string) - 1] = '\0';
+                printf("pre: %s\n", preorder_string);
+                printf("in: %s\n", inorder_string);
+                int preorder_string_length = getLength(preorder_string);
+                int inorder_string_length = getLength(inorder_string);
+                int real_string_length = 0;
+                if (preorder_string_length  == inorder_string_length) {
+                    real_string_length = preorder_string_length;
+                }
+                
+                //if (real_string_length == 0) move to next dataset
+                
+                int ind_preorder = 0;
+            
+                root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length);
+                
+                
+                //writing into the output file
+                levelOrderPrinting(root, string_size, output_file);
+                menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
+                success_choice = FALSE;
+                 while (success_choice == FALSE) {
+                    menu_choice = printMenu(menu_choice, menuchoice_size);
+                    printf("%s\n", menu_choice);
+                    if (strlen(menu_choice) == 1) {
+                        num_menu = menu_choice[0] - '0';
+                        if (num_menu > 0 && num_menu < 4) {
+                            success_choice = TRUE;
+                        } 
+                        
+                        else {
+                            printf("Enter a number menu from 1 to 3 only");
+                        }
+                    }
+                    
+                    else {
+                        printf("Enter a choice of length 1 only");
+                    }    
+                }    
+            }
         }
         
         if (num_menu == 2) {
@@ -569,25 +622,20 @@ int main(void) {
                 fgets(line2, LINELENGTH, input_file);
                 line2[strlen(line2) - 1] = '\0';
                 inorder_string = &line2[INPUTADJUSTINORDER];
-                printf("%s\n", preorder_string);
-                printf("%s\n", inorder_string);
-                    int preorder_string_length = getLength(preorder_string);
+                printf("pre: %s\n", preorder_string);
+                printf("in: %s\n", inorder_string);
+                int preorder_string_length = getLength(preorder_string);
                 int inorder_string_length = getLength(inorder_string);
                 int real_string_length = 0;
                 if (preorder_string_length  == inorder_string_length) {
                     real_string_length = preorder_string_length;
                 }
-                int copy_real_string_length = real_string_length;
                 
                 //if (real_string_length == 0) move to next dataset
                 
-                int ind_preorder = 0, j;
-                visited_binary_tags = malloc(real_string_length * sizeof(int));
-                for (j = 0; j < real_string_length; j++) {
-                    visited_binary_tags[j] = 0;    
-                }
+                int ind_preorder = 0;
             
-                root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length, visited_binary_tags);
+                root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length);
                 
                 
                 //writing into the output file
@@ -631,10 +679,6 @@ int main(void) {
 
     if (line2 != NULL) {
         free(line2);    
-    }
-    
-    if (visited_binary_tags != NULL) {
-        free(visited_binary_tags);
     }
 
     if (input_name != NULL) {
