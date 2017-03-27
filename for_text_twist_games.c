@@ -407,21 +407,6 @@ char* newStrcpy(char* string, int start_ind, int end_ind) {
     return returned_string;
 }
 
-/**
-char* newStrcpyLeft(char* string, int start_ind, int end_ind) {
-    if (start_ind == end_ind + 1) {
-        printf("nullleft start_ind %d end_ind %d\n", start_ind, end_ind);
-        return NULL;
-    }
-    printf("non-nullleft start_ind %d end_ind %d\n", start_ind, end_ind);
-    int size = end_ind - start_ind + 1;
-    char* returned_string = malloc(sizeof(char) * (size + 1));
-    strncpy(returned_string, &string[start_ind], size);
-    returned_string[size] = '\0';
-    return returned_string;
-} */
-
-
 Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* new_inorder_string, int inorder_string_length) {
     Node *root;
     inorder_string_length = getLength(new_inorder_string);
@@ -517,58 +502,205 @@ int checkIfValidStrings(char* preorder_string, int preorder_string_length, char*
     return TRUE;
 }
 
+//for menu system
+
+char* printMenu(char* menu_choice, int menuchoice_size) {
+    printf("How would you like your input to be further processed?\n");
+    printf("Enter 1 for processing through the command line\n");
+    printf("Enter 2 for processing through an input file\n");
+    printf("Enter 3 to stop processing input\n");
+    printf("Enter a number from the menu: ");
+    fgets(menu_choice, menuchoice_size, stdin);
+    menu_choice[strlen(menu_choice) - 1] = '\0';
+    return menu_choice;
+}
+
+char* printMenuWithDataIter(char* menu_choice, int menuchoice_size) {
+    printf("How would you like your input to be further processed?\n");
+    printf("Enter 0 to process the next dataset\n");
+    printf("Enter 1 for processing through the command line\n");
+    printf("Enter 2 for processing through an input file\n");
+    printf("Enter 3 to stop processing input on the file chosen\n");
+    printf("Enter a number from the menu: ");
+    fgets(menu_choice, menuchoice_size, stdin);
+    menu_choice[strlen(menu_choice) - 1] = '\0';
+    return menu_choice;
+}
+
     
 int main(void) {
     
-    //reading from the input file
-    int filename_size = 50, string_size = 40;
-    //char* input_name = malloc(sizeof(char) * filename_size);
-    //assert(input_name != NULL);
-    char* input_name = "input.txt";
-    FILE* input_file = fopen(input_name, "r");
-    assert(input_file != NULL);
+    //reading from the input file and writing from output file
+    int filename_size = 50, string_size = 40, menuchoice_size = 10;
+
+    //for input
+    char* input_name = NULL;
+    input_name = malloc(sizeof(char) * filename_size);
+    assert(input_name != NULL);
+    FILE* input_file, *output_file;
+    
+    //for output
     //char* output_name = malloc(sizeof(char) * filename_size);
     //assert(output_name != NULL);
     char* output_name = "output.txt";
-    FILE* output_file = fopen(output_name, "a");
+    output_file = fopen(output_name, "a");
     assert(output_file != NULL);
-    char* line = malloc(LINELENGTH * sizeof(char));
-    assert(line != NULL);
-    char* line2 = malloc(LINELENGTH * sizeof(char));
-    assert(line2 != NULL);
-    char* preorder_string = NULL;
-    char* inorder_string = NULL;
-    while (fgets(line, LINELENGTH, input_file)) {
-        line[strlen(line) - 1] = '\0';
-        preorder_string = &line[INPUTADJUSTPREORDER];
-        fgets(line2, LINELENGTH, input_file);
-        line2[strlen(line2) - 1] = '\0';
-        inorder_string = &line2[INPUTADJUSTINORDER];
-         printf("%s\n", preorder_string);
-         printf("%s\n", inorder_string);
-    }
     
+    //for menu choice
+    int success_choice = FALSE, num_menu;
+    char* preorder_string = NULL, * inorder_string = NULL, * line = NULL, * line2 = NULL;
+    char* menu_choice = malloc(sizeof(char) * menuchoice_size);
+    assert(menu_choice != NULL);
+    
+    //construction of binary tree
     int preorder_string_length = getLength(preorder_string);
     int inorder_string_length = getLength(inorder_string);
-    
-    int valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
-    
-    if (valid_strings == TRUE) {
-       int ind_preorder = 0;
-       Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
-       levelOrderPrinting(root, string_size, output_file);
-       freeBinaryTree(root);   
-    }
-    
-    else {
-        printf("The preorder and inorder sequences strings either didn't have the same length or contains inappropriate characters\n");
-    }
-    
-    
-    //writing into the output file
+    int valid_strings;
+    Node* root = NULL;
+    do {
+        while (success_choice == FALSE) {
+            menu_choice = printMenu(menu_choice, menuchoice_size);
+            printf("%s\n", menu_choice);
+            if (strlen(menu_choice) == 1) {
+                num_menu = menu_choice[0] - '0';
+                if ((num_menu > 0) && (num_menu < 4)) {
+                    success_choice = TRUE;
+                }
 
+                else {
+                    printf("Enter a number menu from 1 to 3 only");
+                }
+            }
+
+            else {
+                printf("Enter a choice of length 1 only");
+            }
+        }
+        
+        if (num_menu == 1) {
+            while (num_menu == 1) {
+                printf("What is the string in preorder traversal: ");
+                fgets(preorder_string, string_size, stdin);
+                preorder_string[strlen(preorder_string) - 1] = '\0';
+                printf("What is the string in inorder traversal: ");
+                fgets(inorder_string, string_size, stdin);
+                inorder_string[strlen(inorder_string) - 1] = '\0';
+                printf("pre: %s\n", preorder_string);
+                printf("in: %s\n", inorder_string);
+                
+                valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
+    
+                if (valid_strings == TRUE) {
+                   int ind_preorder = 0;
+                   Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
+                   levelOrderPrinting(root, string_size, output_file);
+              
+                }
+                
+                else {
+                    printf("The preorder and inorder sequences strings either didn't have the same length or contains inappropriate characters\n");
+                }
+                
+                //another choice of input mode
+                menu_choice = printMenu(menu_choice, menuchoice_size);
+                success_choice = FALSE;
+                 while (success_choice == FALSE) {
+                    menu_choice = printMenu(menu_choice, menuchoice_size);
+                    printf("%s\n", menu_choice);
+                    if (strlen(menu_choice) == 1) {
+                        num_menu = menu_choice[0] - '0';
+                        if (num_menu > 0 && num_menu < 4) {
+                            success_choice = TRUE;
+                        }
+
+                        else {
+                            printf("Enter a number menu from 1 to 3 only");
+                        }
+                    }
+
+                    else {
+                        printf("Enter a choice of length 1 only");
+                    }
+                }
+            }
+        }
+        
+        if (num_menu == 2) {
+            printf("What is the name of the input file: ");
+            fgets(input_name, filename_size, stdin);
+            input_name[strlen(input_name) - 1] = '\0';
+            input_file = fopen(input_name, "r");
+            assert(input_file != NULL);
+            line = malloc(LINELENGTH * sizeof(char));
+            assert(line != NULL);
+            line2 = malloc(LINELENGTH * sizeof(char));
+            assert(line2 != NULL);
+            int more_dataset = TRUE;
+             while (more_dataset == TRUE && fgets(line, LINELENGTH, input_file)) {
+                line[strlen(line) - 1] = '\0';
+                preorder_string = &line[INPUTADJUSTPREORDER];
+                fgets(line2, LINELENGTH, input_file);
+                line2[strlen(line2) - 1] = '\0';
+                inorder_string = &line2[INPUTADJUSTINORDER];
+                printf("pre: %s\n", preorder_string);
+                printf("in: %s\n", inorder_string);
+             
+                valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
+    
+                if (valid_strings == TRUE) {
+                   int ind_preorder = 0;
+                   Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
+                   levelOrderPrinting(root, string_size, output_file);
+              
+                }
+                
+                else {
+                    printf("The preorder and inorder sequences strings either didn't have the same length or contains inappropriate characters\n");
+                }
+                
+                //another choice of input mode
+                menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
+                success_choice = FALSE;
+                while (success_choice == FALSE) {
+                    menu_choice = printMenu(menu_choice, menuchoice_size);
+                    printf("%s\n", menu_choice);
+                    if (strlen(menu_choice) == 1) {
+                        num_menu = menu_choice[0] - '0';
+                        if ((num_menu >= 0) && (num_menu < 4)) {
+                            success_choice = TRUE;
+                        }
+
+                        else {
+                            printf("Enter a number menu from 0 to 3 only");
+                        }
+                    }
+
+                    else {
+                        printf("Enter a choice of length 1 only");
+                    }
+                }
+                if (num_menu != 0) {
+                    more_dataset = FALSE;
+                }
+             }
+             if (more_dataset == TRUE) {
+                printf("All the inputs are already processed\n");
+            }
+             
+        }
+    }while (num_menu != 3);
+    
+    
+
+    
+    
+    
+    //freeing all the pointers
+    freeBinaryTree(root);
+    free(menu_choice);
     free(line);
     free(line2);
+    free(input_name);
     free(input_file);
     free(output_file);
     return 0;
