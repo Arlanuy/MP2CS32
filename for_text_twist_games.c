@@ -376,7 +376,7 @@ int getIndex(char* inorder_string, int inorder_length, char c) {
     int i = 0;
     while (inorder_string[i] != c) {
         i++;
-        if (i == inorder_length - 1) {
+        if (i == inorder_length) {
             return -1;
         }
     }
@@ -424,7 +424,7 @@ Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* new_ino
         printf("2 c is %c\n isl: %d\n is: %s\n", c, inorder_string_length, new_inorder_string);
         
         int root_ind = getIndex(new_inorder_string, inorder_string_length, c);
-       
+        printf("root_ind %d\n", root_ind);
         char* right_subtree = newStrcpy(new_inorder_string, root_ind + 1, inorder_string_length - 1);
         if (right_subtree != NULL)
         printf("rs: %s\n", right_subtree);
@@ -503,6 +503,57 @@ int checkIfValidStrings(char* preorder_string, int preorder_string_length, char*
     return TRUE;
 }
 
+int recursiveValidArrangementChecking(int* ind_preorder, char* preorder_string, char* new_inorder_string, int inorder_string_length) {
+    inorder_string_length = getLength(new_inorder_string);
+    if ((inorder_string_length == 0) || (new_inorder_string == NULL) || (preorder_string[*ind_preorder] == '\0')) {
+        printf("node 1 is null\n");
+        (*ind_preorder)--;
+        return TRUE;
+    }
+    
+    else {
+        char c = getCharAt(preorder_string, *ind_preorder);
+        printf("rvac c is %c\n isl: %d\n is: %s\n", c, inorder_string_length, new_inorder_string);
+        int root_ind = getIndex(new_inorder_string, inorder_string_length, c);
+        printf("root_ind %d\n", root_ind);
+        int contains_root;
+        if (root_ind == -1) {
+            return FALSE;    
+        }
+        
+        else {
+            contains_root = TRUE;
+        }
+        char* right_subtree = newStrcpy(new_inorder_string, root_ind + 1, inorder_string_length - 1);
+        if (right_subtree != NULL)
+        printf("rs: %s\n", right_subtree);
+        char* left_subtree = newStrcpy(new_inorder_string, 0, root_ind - 1);
+        if (left_subtree != NULL)
+        printf("ls: %s\n", left_subtree);
+
+        
+        (*ind_preorder)++;
+        int contains_left = recursiveValidArrangementChecking(ind_preorder, preorder_string, left_subtree, inorder_string_length);
+        (*ind_preorder)++;
+        int contains_right = recursiveValidArrangementChecking(ind_preorder, preorder_string, right_subtree, inorder_string_length);
+        if (left_subtree != NULL) {
+            free(left_subtree);    
+        }
+        
+        if (right_subtree != NULL) {
+            free(right_subtree);    
+        }
+        
+        if ((contains_root == TRUE) && (contains_left == TRUE) && (contains_right == TRUE)) {
+            return TRUE;
+        } 
+        
+        else {
+            return FALSE;
+        }
+    }
+}
+
 //for menu system
 
 char* printMenu(char* menu_choice, int menuchoice_size) {
@@ -556,7 +607,7 @@ int main(void) {
     //construction of binary tree
     int preorder_string_length = getLength(preorder_string);
     int inorder_string_length = getLength(inorder_string);
-    int valid_strings;
+    int valid_strings, valid_arrangement;
     Node* root = NULL;
     do {
         while (success_choice == FALSE) {
@@ -579,6 +630,11 @@ int main(void) {
         }
         
         if (num_menu == 1) {
+            preorder_string = malloc(string_size * sizeof(char));
+            assert(preorder_string != NULL);
+            inorder_string = malloc(string_size * sizeof(char));
+            assert(inorder_string != NULL);
+
             while (num_menu == 1) {
                 printf("What is the string in preorder traversal: ");
                 fgets(preorder_string, string_size, stdin);
@@ -588,14 +644,19 @@ int main(void) {
                 inorder_string[strlen(inorder_string) - 1] = '\0';
                 printf("pre: %s\n", preorder_string);
                 printf("in: %s\n", inorder_string);
-                
+                int ind_preorder = 0;
                 valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
-    
+                valid_arrangement = recursiveValidArrangementChecking(&ind_preorder, preorder_string, inorder_string, inorder_string_length);    
                 if (valid_strings == TRUE) {
-                   int ind_preorder = 0;
-                   Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
-                   levelOrderPrinting(root, string_size, output_file);
-              
+                   if (valid_arrangement == TRUE) {
+                       ind_preorder = 0;
+                       Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
+                       //levelOrderPrinting(root, string_size, output_file);   
+                   }
+                   else {
+                      printf("The preorder and inorder sequences strings don't correspond to one another due to incorrect arrangement thus, not defining any binary tree\n"); 
+                   }
+                    
                 }
                 
                 else {
@@ -603,7 +664,6 @@ int main(void) {
                 }
                 
                 //another choice of input mode
-                menu_choice = printMenu(menu_choice, menuchoice_size);
                 success_choice = FALSE;
                  while (success_choice == FALSE) {
                     menu_choice = printMenu(menu_choice, menuchoice_size);
@@ -623,7 +683,18 @@ int main(void) {
                         printf("Enter a choice of length 1 only");
                     }
                 }
+                
             }
+            if (preorder_string != NULL) {
+                free(preorder_string);
+                preorder_string = NULL;
+            }
+            
+            if (inorder_string != NULL) {
+                free(inorder_string); 
+                inorder_string = NULL;
+            }
+            
         }
         
         if (num_menu == 2) {
@@ -643,16 +714,21 @@ int main(void) {
                 fgets(line2, LINELENGTH, input_file);
                 line2[strlen(line2) - 1] = '\0';
                 inorder_string = &line2[INPUTADJUSTINORDER];
-                printf("pre: %s\n spongebob input file %p\n", preorder_string, input_file);
+                printf("pre: %s\n", preorder_string);
                 printf("in: %s\n", inorder_string);
-             
+                int ind_preorder = 0;
                 valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
-    
+                valid_arrangement = recursiveValidArrangementChecking(&ind_preorder, preorder_string, inorder_string, inorder_string_length);    
                 if (valid_strings == TRUE) {
                    int ind_preorder = 0;
-                   Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
-                   levelOrderPrinting(root, string_size, output_file);
-              
+                    if (valid_arrangement == TRUE) {
+                       ind_preorder = 0;
+                       Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
+                       //levelOrderPrinting(root, string_size, output_file);   
+                   }
+                   else {
+                      printf("The preorder and inorder sequences strings don't correspond to one another due to incorrect arrangement thus, not defining any binary tree\n"); 
+                   }
                 }
                 
                 else {
@@ -660,10 +736,10 @@ int main(void) {
                 }
                 
                 //another choice of input mode
-                menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
+                
                 success_choice = FALSE;
                 while (success_choice == FALSE) {
-                    menu_choice = printMenu(menu_choice, menuchoice_size);
+                    menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
                     printf("%s\n", menu_choice);
                     if (strlen(menu_choice) == 1) {
                         num_menu = menu_choice[0] - '0';
@@ -680,6 +756,7 @@ int main(void) {
                         printf("Enter a choice of length 1 only");
                     }
                 }
+                printf("num menu is %d\n", num_menu);
                 if (num_menu != 0) {
                     more_dataset = FALSE;
                 }
@@ -690,19 +767,31 @@ int main(void) {
              
         }
     }while (num_menu != 3);
-    
-    
 
-    
-    
-    
     //freeing all the pointers
     freeBinaryTree(root);
-    free(menu_choice);
-    free(line);
-    free(line2);
-    free(input_name);
-    free(input_file);
-    free(output_file);
+    if (menu_choice != NULL) {
+        free(menu_choice);    
+    }
+    if (line != NULL) {
+        free(line);    
+    }
+    
+    if (line2 != NULL) {
+        free(line2);    
+    }
+    
+    if (input_name != NULL) {
+        free(input_name);    
+    }
+    
+    if(input_file != NULL) {
+        free(input_file);    
+    }
+    
+    if (output_file != NULL) {
+        free(output_file);    
+    }
+    
     return 0;
 }
