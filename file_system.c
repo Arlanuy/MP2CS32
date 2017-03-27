@@ -462,6 +462,8 @@ Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder
         root->LSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, left_subtree, orig_inorder_string_length, inorder_string_length);
         (*ind_preorder)++;
         root->RSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, right_subtree, orig_inorder_string_length, inorder_string_length);
+        free(right_subtree);
+        free(left_subtree);
         return root;
     }
 
@@ -518,7 +520,7 @@ int main(void) {
     char* input_name = NULL;
     input_name = malloc(sizeof(char) * filename_size); 
     assert(input_name != NULL);
-    FILE* input_file, *output_file;
+    FILE* input_file = NULL, *output_file = NULL;
     
     //for output
     //char* output_name = malloc(sizeof(char) * filename_size);
@@ -526,7 +528,7 @@ int main(void) {
     char* output_name = "out.txt";
     output_file = fopen(output_name, "a");
     assert(output_file != NULL);
-    
+    fprintf(output_file, "wait");
     //for menu choice
     int success_choice = FALSE, num_menu;
     char* preorder_string = NULL, * inorder_string = NULL, * line = NULL, * line2 = NULL;
@@ -602,7 +604,7 @@ int main(void) {
             }
         }
         
-        if (num_menu == 2) {
+        if (num_menu == 2) {
             printf("What is the name of the input file: ");
             fgets(input_name, filename_size, stdin);
             input_name[strlen(input_name) - 1] = '\0';
@@ -671,7 +673,7 @@ int main(void) {
     freeBinaryTree(root); 
     
     if (menu_choice != NULL) {
-        free(menu_choice); 
+        free(menu_choice);
     }
 
     if (line != NULL) {

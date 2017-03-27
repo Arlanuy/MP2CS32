@@ -1,0 +1,23 @@
+waitbe ready for disappointmentsdata is D num nodes is 1
+								D	
+data is I num nodes is 2
+							/		\
+						/				\
+					I	data is S num nodes is 2
+					S	
+data is C num nodes is 4
+				/		\				 		\
+             C	   data is O num nodes is 4
+        O	   data is 0 num nodes is 4
+			data is V num nodes is 4
+        V	   
+data is 0 num nodes is 8
+                \                                      /    \
+             data is E num nodes is 8
+   E	data is 0 num nodes is 8
+		data is 0 num nodes is 8
+		data is 0 num nodes is 8
+		data is 0 num nodes is 8
+		data is R num nodes is 8
+   R	data is Y num nodes is 8
+   Y	
