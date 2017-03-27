@@ -71,10 +71,6 @@ void printContent(Queue* q) {
 }
 
 void freeContent(Queue* q) {
-    int i;
-    for (i = q->front + 1; i <= q->rear; i++) {
-        free(q->arr[i]); 
-    }
     free(q->arr);
 }
 
@@ -365,6 +361,7 @@ void levelOrderPrinting(Node* root, int size, FILE* output_file) {
             }
             
         }
+        free(nodes_height_tags);
         free(null_node);
         freeContent(q);
         free(q);
@@ -399,47 +396,33 @@ int getLength(char* string) {
     return i;
 }
 
-char* newStrcpyRight(char* string, int start_ind, int end_ind) {
-    if (start_ind == end_ind) {
-        return NULL;
-    }
-    
-    int size = end_ind - start_ind;
-    char* returned_string = malloc(sizeof(char) * (size + 1));
-    strncpy(returned_string, &string[start_ind], size );
-    returned_string[start_ind + size] = '\0';
-    return returned_string;
-}
-
-char* newStrcpyLeft(char* string, int start_ind, int end_ind) {
+char* newStrcpy(char* string, int start_ind, int end_ind) {
     if (start_ind == end_ind + 1) {
         return NULL;
     }
-    
     int size = end_ind - start_ind + 1;
     char* returned_string = malloc(sizeof(char) * (size + 1));
     strncpy(returned_string, &string[start_ind], size );
-    returned_string[start_ind + size + 1] = '\0';
+    returned_string[size] = '\0';
     return returned_string;
 }
 
-int getILU(int* visited_binary_tags, int root_ind) {
-    int i = root_ind;
-    while (i > 0 && visited_binary_tags[i - 1] == 0)  {
-        i--;
+/**
+char* newStrcpyLeft(char* string, int start_ind, int end_ind) {
+    if (start_ind == end_ind + 1) {
+        printf("nullleft start_ind %d end_ind %d\n", start_ind, end_ind);
+        return NULL;
     }
-    return i;
-}
+    printf("non-nullleft start_ind %d end_ind %d\n", start_ind, end_ind);
+    int size = end_ind - start_ind + 1;
+    char* returned_string = malloc(sizeof(char) * (size + 1));
+    strncpy(returned_string, &string[start_ind], size);
+    returned_string[size] = '\0';
+    return returned_string;
+} */
 
-int getIRU(int* visited_binary_tags, int string_length, int root_ind) {
-    int i = root_ind;
-    while (i < string_length - 1 && visited_binary_tags[i + 1] == 0)  {
-        i++;
-    }
-    return i;
-}
 
-Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder_string, char* new_inorder_string, int orig_inorder_string_length, int inorder_string_length, int* visited_binary_tags) {
+Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* new_inorder_string, int inorder_string_length) {
     Node *root;
     inorder_string_length = getLength(new_inorder_string);
     if ((inorder_string_length == 0) || (new_inorder_string == NULL) || (preorder_string[*ind_preorder] == '\0')) {
@@ -455,24 +438,33 @@ Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* inorder
         printf("2 c is %c\n isl: %d\n is: %s\n", c, inorder_string_length, new_inorder_string);
         
         int root_ind = getIndex(new_inorder_string, inorder_string_length, c);
-        //tagged as 1 if the char at root_ind is already  visited
-        //visited_binary_tags[root_ind] = 1;
-        //int ind_leftmost_unvisited = getILU(visited_binary_tags, root_ind);
-        //int ind_rightmost_unvisited = getIRU(visited_binary_tags, orig_inorder_string_length, root_ind);
-        char* right_subtree = newStrcpyRight(new_inorder_string, root_ind + 1, inorder_string_length);
+       
+        char* right_subtree = newStrcpy(new_inorder_string, root_ind + 1, inorder_string_length - 1);
         if (right_subtree != NULL)
         printf("rs: %s\n", right_subtree);
-        char* left_subtree = newStrcpyLeft(new_inorder_string, 0, root_ind - 1);
+        char* left_subtree = newStrcpy(new_inorder_string, 0, root_ind - 1);
         if (left_subtree != NULL)
         printf("ls: %s\n", left_subtree);
         (*ind_preorder)++;
-        root->LSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, left_subtree, orig_inorder_string_length, inorder_string_length, visited_binary_tags);
+        root->LSON = recursiveConstruct(ind_preorder, preorder_string, left_subtree, inorder_string_length);
         (*ind_preorder)++;
-        root->RSON = recursiveConstruct(ind_preorder, preorder_string, inorder_string, right_subtree, orig_inorder_string_length, inorder_string_length, visited_binary_tags);
+        root->RSON = recursiveConstruct(ind_preorder, preorder_string, right_subtree, inorder_string_length);
+        free(left_subtree);
+        free(right_subtree);
         return root;
     }
 
   
+}
+
+void freeBinaryTree(Node* root) {
+    if (root != NULL) {
+        Node* LSON = root->LSON;
+        Node* RSON = root->RSON;
+        free(root);
+        freeBinaryTree(LSON);
+        freeBinaryTree(RSON);
+    }
 }
 
 
@@ -483,6 +475,46 @@ void printArrayContent(int* arr, int size) {
         printf("%d\t", arr[i]);
     }
     printf("\n");
+}
+
+int stringContainsChar(char* string, int length, char c) {
+    int i;
+    for (i = 0; i < length; i++) {
+        if (string[i] == c) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+int checkIfIsoGram(char* string, int length) {
+    int i, j;
+    for (i = 0; i < length; i++) {
+        for (j = i + 1; j  < length; j++) {
+            if (string[i] == string[j]) {
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+int checkIfValidStrings(char* preorder_string, int preorder_string_length, char* inorder_string, int inorder_string_length) {
+    if (preorder_string_length  != inorder_string_length) {
+        return FALSE;
+    }
+    
+    if ((checkIfIsoGram(preorder_string, preorder_string_length) == FALSE) || checkIfIsoGram(inorder_string, inorder_string_length) == FALSE) {
+        return FALSE;
+    }
+    
+    int i;
+    for (i = 0; i < preorder_string_length; i++) {
+        if ((stringContainsChar(inorder_string, inorder_string_length, preorder_string[i]) == FALSE) || (stringContainsChar(preorder_string, preorder_string_length, inorder_string[i]) == FALSE)) {
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
     
@@ -504,8 +536,8 @@ int main(void) {
     assert(line != NULL);
     char* line2 = malloc(LINELENGTH * sizeof(char));
     assert(line2 != NULL);
-    char* preorder_string;
-    char* inorder_string;
+    char* preorder_string = NULL;
+    char* inorder_string = NULL;
     while (fgets(line, LINELENGTH, input_file)) {
         line[strlen(line) - 1] = '\0';
         preorder_string = &line[INPUTADJUSTPREORDER];
@@ -518,27 +550,23 @@ int main(void) {
     
     int preorder_string_length = getLength(preorder_string);
     int inorder_string_length = getLength(inorder_string);
-    int real_string_length = 0;
-    if (preorder_string_length  == inorder_string_length) {
-        real_string_length = preorder_string_length;
-    }
-    int copy_real_string_length = real_string_length;
     
-    //if (real_string_length == 0) move to next dataset
+    int valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
     
-    int ind_preorder = 0, j;
-    int* visited_binary_tags = malloc(real_string_length * sizeof(int));
-    for (j = 0; j < real_string_length; j++) {
-        visited_binary_tags[j] = 0;    
+    if (valid_strings == TRUE) {
+       int ind_preorder = 0;
+       Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, preorder_string_length);
+       levelOrderPrinting(root, string_size, output_file);
+       freeBinaryTree(root);   
     }
-
-    Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length, visited_binary_tags);
+    
+    else {
+        printf("The preorder and inorder sequences strings either didn't have the same length or contains inappropriate characters\n");
+    }
     
     
     //writing into the output file
-    levelOrderPrinting(root, string_size, output_file);
-    
-    free(root);
+
     free(line);
     free(line2);
     free(input_file);
