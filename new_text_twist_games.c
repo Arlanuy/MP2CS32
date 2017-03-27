@@ -396,13 +396,11 @@ int getLength(char* string) {
     return i;
 }
 
-char* newStrcpy(char* string, int start_ind, int end_ind) {
+char* newStrcpy(char* returned_string, int size, char* string, int start_ind, int end_ind) {
     if (start_ind == end_ind + 1) {
         return NULL;
     }
-    int size = end_ind - start_ind + 1;
-    char* returned_string = malloc(sizeof(char) * (size + 1));
-    assert(returned_string != NULL);
+    
     strncpy(returned_string, &string[start_ind], size );
     returned_string[size] = '\0';
     return returned_string;
@@ -425,10 +423,18 @@ Node* recursiveConstruct(int* ind_preorder, char* preorder_string, char* new_ino
         
         int root_ind = getIndex(new_inorder_string, inorder_string_length, c);
        
-        char* right_subtree = newStrcpy(new_inorder_string, root_ind + 1, inorder_string_length - 1);
+
+
+        int right_size = inorder_string_length - root_ind - 1;
+        char* right_subtree = malloc(sizeof(char) * (right_size + 1));
+        assert(right_subtree != NULL);
+        right_subtree = newStrcpy(right_subtree, right_size, new_inorder_string, root_ind + 1, inorder_string_length - 1);
         if (right_subtree != NULL)
         printf("rs: %s\n", right_subtree);
-        char* left_subtree = newStrcpy(new_inorder_string, 0, root_ind - 1);
+        int left_size = root_ind;
+        char* left_subtree = malloc(sizeof(char) * (left_size + 1));
+        assert(left_subtree != NULL);
+        left_subtree = newStrcpy(left_subtree, left_size, new_inorder_string, 0, root_ind - 1);
         if (left_subtree != NULL)
         printf("ls: %s\n", left_subtree);
         (*ind_preorder)++;
@@ -558,6 +564,7 @@ int main(void) {
     int inorder_string_length = getLength(inorder_string);
     int valid_strings;
     Node* root = NULL;
+
     do {
         while (success_choice == FALSE) {
             menu_choice = printMenu(menu_choice, menuchoice_size);
@@ -645,7 +652,7 @@ int main(void) {
                 inorder_string = &line2[INPUTADJUSTINORDER];
                 printf("pre: %s\n spongebob input file %p\n", preorder_string, input_file);
                 printf("in: %s\n", inorder_string);
-             
+                
                 valid_strings = checkIfValidStrings(preorder_string, preorder_string_length, inorder_string,  inorder_string_length);
     
                 if (valid_strings == TRUE) {
