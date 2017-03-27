@@ -13,15 +13,6 @@
 
 typedef struct Node Node;
 
-
-    /**
-    int filename_size = 50;
-    char* input_name = NULL;
-    input_name = malloc(sizeof(char) * filename_size);
-    assert(input_name != NULL);
-    input_name[strlen(input_name) - 1] = '\0';
-    free(input_name);*/
-
 struct Node
 {
     char data;
@@ -485,63 +476,178 @@ void printArrayContent(int* arr, int size) {
     printf("\n");
 }
 
+char* printMenu(char* menu_choice, int menuchoice_size) {
+    printf("How would you like your input to be further processed?\n");
+    printf("Enter 1 for processing through the command line\n");
+    printf("Enter 2 for processing through an input file\n");
+    printf("Enter 3 to stop processing input\n");
+    printf("Enter a number from the menu: ");
+    fgets(menu_choice, menuchoice_size, stdin);
+    menu_choice[strlen(menu_choice) - 1] = '\0';
+    return menu_choice;
+}
+
+char* printMenuWithDataIter(char* menu_choice, int menuchoice_size) {
+    printf("How would you like your input to be further processed?\n");
+    printf("Enter 0 to process the next dataset\n");
+    printf("Enter 1 for processing through the command line\n");
+    printf("Enter 2 for processing through an input file\n");
+    printf("Enter 3 to stop processing input on the file chosen\n");
+    printf("Enter a number from the menu: ");
+    fgets(menu_choice, menuchoice_size, stdin);
+    menu_choice[strlen(menu_choice) - 1] = '\0';
+    return menu_choice;
+}
+
+void freeBinaryTree(Node* root) {
+    if (root != NULL) {
+        Node* LSON = root->LSON;
+        Node* RSON = root->RSON;
+        free(root);
+        freeBinaryTree(LSON);
+        freeBinaryTree(RSON);
+    }
+}
     
 int main(void) {
-    
     //reading from the input file
-    int filename_size = 50, string_size = 40;
-    //char* input_name = malloc(sizeof(char) * filename_size);
-    //assert(input_name != NULL);
-    char* input_name = "input.txt";
-    FILE* input_file = fopen(input_name, "r");
-    assert(input_file != NULL);
-    //char* output_name = malloc(sizeof(char) * filename_size);
+    int filename_size = 50, string_size = 40, menuchoice_size = 10;;
+    //char* input_name = malloc(sizeof(char) * filename_size);L);
+    char* input_name = NULL;
+    input_name = malloc(sizeof(char) * filename_size); 
+    assert(input_name != NULL);
+    FILE* input_file, *output_file;
+    int* visited_binary_tags;
+    
+    //for output
+    //char* output_name = malloc(sizeof(char) * filename_size);
     //assert(output_name != NULL);
     char* output_name = "output.txt";
-    FILE* output_file = fopen(output_name, "a");
+    output_file = fopen(output_name, "a");
     assert(output_file != NULL);
-    char* line = malloc(LINELENGTH * sizeof(char));
-    assert(line != NULL);
-    char* line2 = malloc(LINELENGTH * sizeof(char));
-    assert(line2 != NULL);
-    char* preorder_string;
-    char* inorder_string;
-    while (fgets(line, LINELENGTH, input_file)) {
-        line[strlen(line) - 1] = '\0';
-        preorder_string = &line[INPUTADJUSTPREORDER];
-        fgets(line2, LINELENGTH, input_file);
-        line2[strlen(line2) - 1] = '\0';
-        inorder_string = &line2[INPUTADJUSTINORDER];
-         printf("%s\n", preorder_string);
-         printf("%s\n", inorder_string);
-    }
     
-    int preorder_string_length = getLength(preorder_string);
-    int inorder_string_length = getLength(inorder_string);
-    int real_string_length = 0;
-    if (preorder_string_length  == inorder_string_length) {
-        real_string_length = preorder_string_length;
-    }
-    int copy_real_string_length = real_string_length;
+    //for menu choice
+    int success_choice = FALSE, num_menu;
+    char* preorder_string, * inorder_string, * line, * line2;
+    char* menu_choice = malloc(sizeof(char) * menuchoice_size); 
+    assert(menu_choice != NULL);
+    Node* root; 
+    do {
+        while (success_choice == FALSE) {
+            menu_choice = printMenu(menu_choice, menuchoice_size);
+            printf("%s\n", menu_choice);
+            if (strlen(menu_choice) == 1) {
+                num_menu = menu_choice[0] - '0';
+                if (num_menu > 0 && num_menu < 4) {
+                    success_choice = TRUE;
+                } 
+                
+                else {
+                    printf("Enter a number menu from 1 to 3 only");
+                }
+            }
+            
+            else {
+                printf("Enter a choice of length 1 only");
+            }    
+        }
+        
+        if (num_menu == 2) {
+            printf("What is the name of the input file: ");
+            fgets(input_name, filename_size, stdin);
+            input_name[strlen(input_name) - 1] = '\0';
+            input_file = fopen(input_name, "r");
+            assert(input_file != NULL);    
+            line = malloc(LINELENGTH * sizeof(char));
+            assert(line != NULL);
+            line2 = malloc(LINELENGTH * sizeof(char));
+            assert(line2 != NULL);
+            int more_dataset = TRUE;
+            while (more_dataset == TRUE && fgets(line, LINELENGTH, input_file)) {
+                line[strlen(line) - 1] = '\0';
+                preorder_string = &line[INPUTADJUSTPREORDER];
+                fgets(line2, LINELENGTH, input_file);
+                line2[strlen(line2) - 1] = '\0';
+                inorder_string = &line2[INPUTADJUSTINORDER];
+                printf("%s\n", preorder_string);
+                printf("%s\n", inorder_string);
+                    int preorder_string_length = getLength(preorder_string);
+                int inorder_string_length = getLength(inorder_string);
+                int real_string_length = 0;
+                if (preorder_string_length  == inorder_string_length) {
+                    real_string_length = preorder_string_length;
+                }
+                int copy_real_string_length = real_string_length;
+                
+                //if (real_string_length == 0) move to next dataset
+                
+                int ind_preorder = 0, j;
+                visited_binary_tags = malloc(real_string_length * sizeof(int));
+                for (j = 0; j < real_string_length; j++) {
+                    visited_binary_tags[j] = 0;    
+                }
+            
+                root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length, visited_binary_tags);
+                
+                
+                //writing into the output file
+                levelOrderPrinting(root, string_size, output_file);
+                menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
+                success_choice = FALSE;
+                while (success_choice == FALSE) {
+                    menu_choice = printMenu(menu_choice, menuchoice_size);
+                    printf("%s\n", menu_choice);
+                    if (strlen(menu_choice) == 1) {
+                        num_menu = menu_choice[0] - '0';
+                        if (num_menu >= 0 && num_menu < 4) {
+                            success_choice = TRUE;
+                        } 
+                        
+                        else {
+                            printf("Enter a number menu from 0 to 3 only");
+                        }
+                    }
+                    
+                    else {
+                        printf("Enter a choice of length 1 only");
+                    }    
+                }
+                if (num_menu != 0) {
+                    more_dataset = FALSE;
+                }
+            }
+            if (more_dataset == TRUE) {
+                printf("All the inputs are already processed\n");
+            }
+        }    
+    }while (num_menu != 3);
     
-    //if (real_string_length == 0) move to next dataset
     
-    int ind_preorder = 0, j;
-    int* visited_binary_tags = malloc(real_string_length * sizeof(int));
-    for (j = 0; j < real_string_length; j++) {
-        visited_binary_tags[j] = 0;    
+    freeBinaryTree(root); 
+
+    if (line != NULL) {
+        free(line); 
     }
 
-    Node* root = recursiveConstruct(&ind_preorder, preorder_string, inorder_string, inorder_string, real_string_length, real_string_length, visited_binary_tags);
+    if (line2 != NULL) {
+        free(line2);    
+    }
     
+    if (visited_binary_tags != NULL) {
+        free(visited_binary_tags);
+    }
+
+    if (input_name != NULL) {
+        free(input_name);    
+    }
+
+    if (input_file != NULL) {
+        free(input_file);    
+    }
     
-    //writing into the output file
-    levelOrderPrinting(root, string_size, output_file);
-    
-    free(root);
-    free(line);
-    free(line2);
-    free(input_file);
-    free(output_file);
+    if (output_file != NULL) {
+        free(output_file);  
+    }
+
     return 0;
 }
